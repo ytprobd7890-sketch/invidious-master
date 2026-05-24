@@ -65,7 +65,9 @@ PG_DB = begin
 rescue ex
   puts "Failed to connect to PostgreSQL database: #{ex.cause.try &.message}"
   puts "Check your 'config.yml' database settings or PostgreSQL settings."
-  exit(1)
+  puts "Retrying in 5 seconds..."
+  sleep 5.seconds
+  retry
 end
 HOST_URL           = make_host_url(Kemal.config)
 MAX_ITEMS_PER_PAGE = 1500
