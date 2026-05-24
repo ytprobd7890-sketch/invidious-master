@@ -60,14 +60,13 @@ alias IV = Invidious
 CONFIG   = Config.load
 HMAC_KEY = CONFIG.hmac_key
 
-PG_DB = begin
-  DB.open CONFIG.database_url
-rescue ex
-  puts "Failed to connect to PostgreSQL database: #{ex.cause.try &.message}"
+PG_DB = loop do
+  db = DB.open(CONFIG.database_url) rescue nil
+  break db if db
+  puts "Failed to connect to PostgreSQL database."
   puts "Check your 'config.yml' database settings or PostgreSQL settings."
   puts "Retrying in 5 seconds..."
   sleep 5.seconds
-  retry
 end
 HOST_URL           = make_host_url(Kemal.config)
 MAX_ITEMS_PER_PAGE = 1500
