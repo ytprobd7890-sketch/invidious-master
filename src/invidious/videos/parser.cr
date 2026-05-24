@@ -64,7 +64,7 @@ def extract_video_info(video_id : String)
       next if response.nil?
 
       status = response.dig?("playabilityStatus", "status").try(&.as_s)
-      has_streams = response.dig?("streamingData", "adaptiveFormats").try(&.as_a.empty? == false) || false
+      has_streams = response.dig?("streamingData", "adaptiveFormats").try { |x| x.as_a.empty? == false } || false
 
       if status == "OK" && has_streams
         player_response = response
