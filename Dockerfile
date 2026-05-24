@@ -19,7 +19,14 @@ RUN curl -Ls "https://github.com/openssl/openssl/releases/download/openssl-${OPE
 RUN echo "${OPENSSL_SHA256}  openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c
 RUN tar -xzvf openssl-${OPENSSL_VERSION}.tar.gz
 
-RUN cd openssl-${OPENSSL_VERSION} && ./Configure --prefix=/openssl-${OPENSSL_VERSION} --openssldir=/etc/ssl && make -j$(nproc) SHELL=/bin/bash && make install_sw
+RUN cd openssl-${OPENSSL_VERSION} && ./Configure --prefix=/openssl-${OPENSSL_VERSION} --openssldir=/etc/ssl && make -j$(nproc) SHELL=/bin/bash && \
+    for pc in libcrypto.pc libssl.pc openssl.pc; do \
+      [ -f "$pc" ] && sed -i \
+        -e "s|^prefix=\.$|prefix=/openssl-${OPENSSL_VERSION}|" \
+        -e "s|^includedir=\./include$|includedir=\\\${prefix}/include|" \
+        -e "s|^libdir=\\\${prefix}/lib[0-9]*$|libdir=\\\${prefix}|" \
+        "$pc"; \
+    done
 
 FROM dependabot-crystal AS builder
 RUN apk add --no-cache bash sqlite-static yaml-static git pkgconfig
@@ -48,13 +55,13 @@ ARG OPENSSL_VERSION
 COPY --from=openssl-builder /openssl-${OPENSSL_VERSION} /openssl-${OPENSSL_VERSION}
 
 RUN if [[ "${release}" == 1 ]] ; then \
-        PKG_CONFIG_PATH=/openssl-${OPENSSL_VERSION}/lib/pkgconfig \
+        PKG_CONFIG_PATH=/openssl-${OPENSSL_VERSION} \
         crystal build ./src/invidious.cr \
         --release \
         --static --warnings all \
         --link-flags "-lxml2 -llzma"; \
     else \
-        PKG_CONFIG_PATH=/openssl-${OPENSSL_VERSION}/lib/pkgconfig \
+        PKG_CONFIG_PATH=/openssl-${OPENSSL_VERSION} \
         crystal build ./src/invidious.cr \
         --static --warnings all \
         --link-flags "-lxml2 -llzma"; \
