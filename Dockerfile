@@ -8,8 +8,8 @@ FROM crystallang/crystal:1.20.2-alpine AS dependabot-crystal
 # with openssl
 # Reference: https://github.com/iv-org/invidious/issues/1438#issuecomment-3087636228
 FROM dependabot-crystal AS openssl-builder
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apk add --no-cache bash curl perl linux-headers
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /
 
@@ -22,8 +22,8 @@ RUN tar -xzvf openssl-${OPENSSL_VERSION}.tar.gz
 RUN cd openssl-${OPENSSL_VERSION} && ./Configure --openssldir=/etc/ssl && make -j$(nproc) SHELL=/bin/bash
 
 FROM dependabot-crystal AS builder
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apk add --no-cache bash sqlite-static yaml-static git
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apk del openssl-dev openssl-libs-static
 
 ARG release
