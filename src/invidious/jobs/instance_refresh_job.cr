@@ -89,6 +89,7 @@ class Invidious::Jobs::InstanceListRefreshJob < Invidious::Jobs::BaseJob
 
   # Checks if the uptime of the target instance is greater than 90% over a 30 day period
   private def bad_uptime?(target_instance_health_monitor) : Bool
+    return true if target_instance_health_monitor.nil?
     return true if target_instance_health_monitor["down"]?.try(&.as_bool) == false
     if uptime = target_instance_health_monitor["uptime"]?
       return true if uptime.as_f < 90
