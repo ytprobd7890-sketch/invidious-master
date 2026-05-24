@@ -65,8 +65,8 @@ module Invidious::Routes::API::Manifest
             next if mime_streams.empty?
 
             mime_streams.each do |fmt|
-              # OTF streams aren't supported yet (See https://github.com/TeamNewPipe/NewPipe/issues/2415)
-              next if !(fmt.has_key?("indexRange") && fmt.has_key?("initRange"))
+              # Handle both segmented and OTF streams
+              is_segmented = fmt.has_key?("indexRange") && fmt.has_key?("initRange")
 
               audio_track = fmt["audioTrack"]?.try &.as_h? || {} of String => JSON::Any
               lang = audio_track["id"]?.try &.as_s.split('.')[0] || "und"
@@ -90,8 +90,10 @@ module Invidious::Routes::API::Manifest
                   xml.element("AudioChannelConfiguration", schemeIdUri: "urn:mpeg:dash:23003:3:audio_channel_configuration:2011",
                     value: "2")
                   xml.element("BaseURL") { xml.text url }
-                  xml.element("SegmentBase", indexRange: "#{fmt["indexRange"]["start"]}-#{fmt["indexRange"]["end"]}") do
-                    xml.element("Initialization", range: "#{fmt["initRange"]["start"]}-#{fmt["initRange"]["end"]}")
+                  if is_segmented
+                    xml.element("SegmentBase", indexRange: "#{fmt["indexRange"]["start"]}-#{fmt["indexRange"]["end"]}") do
+                      xml.element("Initialization", range: "#{fmt["initRange"]["start"]}-#{fmt["initRange"]["end"]}")
+                    end
                   end
                 end
               end
@@ -108,8 +110,8 @@ module Invidious::Routes::API::Manifest
             heights = [] of Int32
             xml.element("AdaptationSet", id: i, mimeType: mime_type, startWithSAP: 1, subsegmentAlignment: true, scanType: "progressive") do
               mime_streams.each do |fmt|
-                # OTF streams aren't supported yet (See https://github.com/TeamNewPipe/NewPipe/issues/2415)
-                next if !(fmt.has_key?("indexRange") && fmt.has_key?("initRange"))
+                # Handle both segmented and OTF streams
+                is_segmented = fmt.has_key?("indexRange") && fmt.has_key?("initRange")
 
                 codecs = fmt["mimeType"].as_s.split("codecs=")[1].strip('"')
                 bandwidth = fmt["bitrate"].as_i
@@ -127,8 +129,10 @@ module Invidious::Routes::API::Manifest
                   startWithSAP: "1", maxPlayoutRate: "1",
                   bandwidth: bandwidth, frameRate: fmt["fps"]) do
                   xml.element("BaseURL") { xml.text url }
-                  xml.element("SegmentBase", indexRange: "#{fmt["indexRange"]["start"]}-#{fmt["indexRange"]["end"]}") do
-                    xml.element("Initialization", range: "#{fmt["initRange"]["start"]}-#{fmt["initRange"]["end"]}")
+                  if is_segmented
+                    xml.element("SegmentBase", indexRange: "#{fmt["indexRange"]["start"]}-#{fmt["indexRange"]["end"]}") do
+                      xml.element("Initialization", range: "#{fmt["initRange"]["start"]}-#{fmt["initRange"]["end"]}")
+                    end
                   end
                 end
               end
