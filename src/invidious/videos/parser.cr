@@ -60,8 +60,19 @@ def extract_video_info(video_id : String)
   client_types.each do |client_type|
     begin
       config = client_type ? YoutubeAPI::ClientConfig.new(client_type: client_type) : nil
-      player_response = YoutubeAPI.player(video_id: video_id, client_config: config)
-      break if player_response && player_response.dig?("playabilityStatus", "status").try(&.as_s) == "OK"
+      response = YoutubeAPI.player(video_id: video_id, client_config: config)
+      next if response.nil?
+
+      status = response.dig?("playabilityStatus", "status").try(&.as_s)
+      has_streams = response.dig?("streamingData", "adaptiveFormats").try(&.as_a.empty? == false) || false
+
+      if status == "OK" && has_streams
+        player_response = response
+        break
+      end
+
+      # Keep first error response as fallback if no successful one found
+      player_response ||= response
     rescue
       next
     end
