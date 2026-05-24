@@ -283,7 +283,9 @@ class Config
     end
 
     # Build database_url from db.* if it's not set directly
-    if config.database_url.to_s.empty?
+    # Also handle unresolved template variables (e.g. ${{Postgres.DATABASE_URL}})
+    db_url = config.database_url.to_s
+    if db_url.empty? || db_url.includes?("${{")
       if db = config.db
         config.database_url = URI.new(
           scheme: "postgres",
