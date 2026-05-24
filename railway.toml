@@ -1,0 +1,16 @@
+[build]
+builder = "DOCKERFILE"
+
+[build.args]
+release = "1"
+
+[[plugins]]
+id = "postgresql"
+
+[service.variables]
+INVIDIOUS_CONFIG = """
+database_url: "${{Postgres.DATABASE_URL}}"
+hmac_key: "${{HMAC_KEY}}"
+domain: "${{RAILWAY_PUBLIC_DOMAIN}}"
+check_tables: true
+"""
