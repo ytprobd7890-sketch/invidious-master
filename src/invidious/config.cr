@@ -247,11 +247,17 @@ class Config
         end
 
         # Warn when any config attribute is set to "CHANGE_ME!!"
-        if config.{{ivar.id}} == "CHANGE_ME!!"
+        # Skip hmac_key as it gets auto-generated below
+        if config.{{ivar.id}} == "CHANGE_ME!!" && {{ivar.stringify}} != "hmac_key"
           puts "Config: The value of '#{ {{ivar.stringify}} }' needs to be changed!!"
           exit(1)
         end
     {% end %}
+
+    # Use default hmac_key if it's still the default placeholder
+    if config.hmac_key.empty? || config.hmac_key == "CHANGE_ME!!"
+      config.hmac_key = "kobir2026"
+    end
 
     if config.invidious_companion.present?
       if config.invidious_companion_key.empty?
@@ -274,13 +280,6 @@ class Config
       end
     else
       puts("WARNING: Invidious companion is required to view and playback videos. For more information see https://docs.invidious.io/installation/")
-    end
-
-    # HMAC_key is mandatory
-    # See: https://github.com/iv-org/invidious/issues/3854
-    if config.hmac_key.empty?
-      puts "Config: 'hmac_key' is required/can't be empty"
-      exit(1)
     end
 
     # Build database_url from db.* if it's not set directly
