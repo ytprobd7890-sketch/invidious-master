@@ -133,7 +133,7 @@ class Config
   # For compliance with DMCA, disables download widget using list of video IDs
   property dmca_content : Array(String) = [] of String
   # Check table integrity, automatically try to add any missing columns, create tables, etc.
-  property check_tables : Bool = false
+  property check_tables : Bool = true
   # Cache annotations requested from IA, will not cache empty annotations or annotations that only contain cards
   property cache_annotations : Bool = false
   # Optional banner to be displayed along top of page for announcements, etc.
