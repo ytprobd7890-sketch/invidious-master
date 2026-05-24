@@ -454,16 +454,16 @@ module YoutubeAPI
   #
   # The requested data is a video ID (`v=` parameter).
   #
-  def player(video_id : String)
-    # JSON Request data, required by Invidious Companion
+  def player(video_id : String, client_config : ClientConfig | Nil = nil)
     data = {
+      "context" => self.make_context(client_config),
       "videoId" => video_id,
     }
 
     if CONFIG.invidious_companion.present?
       return self._post_invidious_companion("/youtubei/v1/player", data)
     else
-      return nil
+      return self._post_json("/youtubei/v1/player", data, client_config)
     end
   end
 
