@@ -63,8 +63,8 @@ HMAC_KEY = CONFIG.hmac_key
 PG_DB = loop do
   db = DB.open(CONFIG.database_url) rescue nil
   break db if db
-  puts "Failed to connect to PostgreSQL database."
-  puts "Check your 'config.yml' database settings or PostgreSQL settings."
+  puts "Failed to connect to PostgreSQL database at #{CONFIG.database_url}."
+  puts "Check your 'config.yml' database settings or add a PostgreSQL plugin in Railway."
   puts "Retrying in 5 seconds..."
   sleep 5.seconds
 end
