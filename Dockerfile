@@ -22,7 +22,7 @@ RUN cd openssl-${OPENSSL_VERSION} && ./Configure --openssldir=/etc/ssl && make -
 
 FROM dependabot-crystal AS builder
 
-RUN apk add --no-cache sqlite-static yaml-static
+RUN apk add --no-cache sqlite-static yaml-static git
 RUN apk del openssl-dev openssl-libs-static
 
 ARG release
@@ -33,14 +33,14 @@ COPY ./shard.lock ./shard.lock
 RUN shards install --production
 
 COPY ./src/ ./src/
-# TODO: .git folder is required for building – this is destructive.
-# See definition of CURRENT_BRANCH, CURRENT_COMMIT and CURRENT_VERSION.
-COPY ./.git/ ./.git/
 
 # Required for fetching player dependencies
 COPY ./scripts/ ./scripts/
 COPY ./assets/ ./assets/
 COPY ./videojs-dependencies.yml ./videojs-dependencies.yml
+
+# Railway doesn't ship .git, so we create a minimal repo for Crystal macros
+RUN git init && git config user.email "builder@invidious" && git config user.name "Builder" && git add -A && git commit -m "build"
 
 
 ARG OPENSSL_VERSION
