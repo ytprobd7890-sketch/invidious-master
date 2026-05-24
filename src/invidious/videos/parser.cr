@@ -54,7 +54,18 @@ end
 
 def extract_video_info(video_id : String)
   # Fetch data from the player endpoint
-  player_response = YoutubeAPI.player(video_id: video_id)
+  client_types = [nil, YoutubeAPI::ClientType::Android, YoutubeAPI::ClientType::IOS]
+  player_response = nil
+
+  client_types.each do |client_type|
+    begin
+      config = client_type ? YoutubeAPI::ClientConfig.new(client_type: client_type) : nil
+      player_response = YoutubeAPI.player(video_id: video_id, client_config: config)
+      break if player_response && player_response.dig?("playabilityStatus", "status").try(&.as_s) == "OK"
+    rescue
+      next
+    end
+  end
 
   if player_response.nil?
     return nil
