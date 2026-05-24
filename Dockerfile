@@ -19,10 +19,10 @@ RUN curl -Ls "https://github.com/openssl/openssl/releases/download/openssl-${OPE
 RUN echo "${OPENSSL_SHA256}  openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c
 RUN tar -xzvf openssl-${OPENSSL_VERSION}.tar.gz
 
-RUN cd openssl-${OPENSSL_VERSION} && ./Configure --openssldir=/etc/ssl && make -j$(nproc) SHELL=/bin/bash
+RUN cd openssl-${OPENSSL_VERSION} && ./Configure --prefix=/openssl-${OPENSSL_VERSION} --openssldir=/etc/ssl && make -j$(nproc) SHELL=/bin/bash
 
 FROM dependabot-crystal AS builder
-RUN apk add --no-cache bash sqlite-static yaml-static git
+RUN apk add --no-cache bash sqlite-static yaml-static git pkgconfig
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apk del openssl-dev openssl-libs-static
 
