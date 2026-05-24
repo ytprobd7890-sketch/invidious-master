@@ -282,9 +282,28 @@ class Config
       puts("WARNING: Invidious companion is required to view and playback videos. For more information see https://docs.invidious.io/installation/")
     end
 
-    # Build database_url from db.* if it's not set directly
-    # Also handle unresolved template variables (e.g. ${{Postgres.DATABASE_URL}})
+    # Check for standard DATABASE_URL env var (used by Railway, Heroku, etc.)
+    if ENV.has_key?("DATABASE_URL") && !ENV.fetch("DATABASE_URL").includes?("${{")
+      config.database_url = URI.parse(ENV.fetch("DATABASE_URL"))
+    end
+
+    # Build database_url from individual PG* env vars (Railway/Heroku style)
     db_url = config.database_url.to_s
+    if db_url.empty? || db_url.includes?("${{")
+      pg_host = ENV["PGHOST"]? || ENV["RAILWAY_PRIVATE_DOMAIN"]?
+      pg_port = ENV["PGPORT"]? || "5432"
+      pg_user = ENV["PGUSER"]? || ENV["POSTGRES_USER"]? || "kemal"
+      pg_pass = ENV["PGPASSWORD"]? || ENV["POSTGRES_PASSWORD"]? || "kemal"
+      pg_db   = ENV["PGDATABASE"]? || ENV["POSTGRES_DB"]? || "invidious"
+
+      # Only use PG env vars if they don't contain unresolved templates
+      if pg_host && !pg_host.includes?("${{") && !pg_user.includes?("${{") && !pg_pass.includes?("${{")
+        config.database_url = URI.parse("postgres://#{pg_user}:#{pg_pass}@#{pg_host}:#{pg_port}/#{pg_db}")
+        db_url = config.database_url.to_s
+      end
+    end
+
+    # Fall back to db.* from config file
     if db_url.empty? || db_url.includes?("${{")
       if db = config.db
         config.database_url = URI.new(
