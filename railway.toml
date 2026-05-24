@@ -9,7 +9,7 @@ id = "postgresql"
 
 [service.variables]
 INVIDIOUS_CONFIG = """
-database_url: "${{Postgres.DATABASE_URL}}"
 hmac_key: "Kobir2026"
 check_tables: true
 """
+DATABASE_URL = "${{Postgres.DATABASE_URL}}"
